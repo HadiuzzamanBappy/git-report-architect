@@ -208,7 +208,7 @@ const HTML_CONTENT = `
             <form id="aiForm">
                 <div class="form-group">
                     <label for="model">Model ID (Select or Type)</label>
-                    <input type="text" id="model" list="model-list" value="@cf/qwen/qwen2.5-coder-32b-instruct" required>
+                    <input type="text" id="model" list="model-list" placeholder="@cf/qwen/qwen2.5-coder-32b-instruct" required>
                     <datalist id="model-list">
                         <option value="@cf/qwen/qwen2.5-coder-32b-instruct">
                         <option value="@cf/meta/llama-3.3-70b-instruct-fp8-fast">
