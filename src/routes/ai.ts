@@ -8,12 +8,13 @@ aiRouter.post('/generate', async (c) => {
 	try {
 		const body = await c.req.json();
 		const prompt = body.prompt;
+		const model = body.model || '@cf/qwen/qwen2.5-coder-32b-instruct'; // Default model
 
 		if (!prompt) {
 			return c.json({ error: 'Prompt is required' }, 400);
 		}
 
-		const cacheKey = `report:${prompt}`;
+		const cacheKey = `report:${model}:${prompt}`;
 
 		// Check the cache first
 		const cachedResult = await c.env.REPORT_CACHE.get(cacheKey);
@@ -22,7 +23,7 @@ aiRouter.post('/generate', async (c) => {
 		}
 
 		// If not in cache, call the AI service
-		const aiResult = await generateReport(prompt, c.env);
+		const aiResult = await generateReport(prompt, model, c.env);
 
 		// Save to KV cache for next time (e.g., cache for 1 hour = 3600 seconds)
 		await c.env.REPORT_CACHE.put(cacheKey, JSON.stringify(aiResult), { expirationTtl: 3600 });

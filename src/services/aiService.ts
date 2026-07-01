@@ -1,8 +1,8 @@
 import type { Env } from '../types';
 
-export async function generateReport(prompt: string, env: Env) {
+export async function generateReport(prompt: string, model: string, env: Env) {
 	// Use Cloudflare Workers AI to run the model
-	const response = await env.AI.run('@cf/qwen/qwen2.5-coder-32b-instruct', {
+	const response = await env.AI.run(model as any, {
 		prompt: prompt,
 	});
 
