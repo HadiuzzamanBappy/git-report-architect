@@ -207,15 +207,15 @@ const HTML_CONTENT = `
 
             <form id="aiForm">
                 <div class="form-group">
-                    <label for="model">Select Model</label>
-                    <select id="model" required>
-                        <option value="@cf/qwen/qwen2.5-coder-32b-instruct" selected>Qwen 2.5 Coder 32B (Recommended)</option>
-                        <option value="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B Instruct</option>
-                        <option value="@cf/deepseek-ai/deepseek-math-7b-instruct">DeepSeek Math 7B</option>
-                        <option value="@cf/google/gemma-7b-it">Google Gemma 7B</option>
-                        <option value="@cf/microsoft/phi-2">Microsoft Phi-2</option>
-                        <option value="@hf/thebloke/mistral-7b-instruct-v0.1-awq">Mistral 7B Instruct</option>
-                    </select>
+                    <label for="model">Model ID (Select or Type)</label>
+                    <input type="text" id="model" list="model-list" value="@cf/qwen/qwen2.5-coder-32b-instruct" required>
+                    <datalist id="model-list">
+                        <option value="@cf/qwen/qwen2.5-coder-32b-instruct">
+                        <option value="@cf/meta/llama-3.3-70b-instruct-fp8-fast">
+                        <option value="@cf/meta/llama-3.1-8b-instruct-fp8">
+                        <option value="@hf/thebloke/mistral-7b-instruct-v0.1-awq">
+                    </datalist>
+                    <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 0.5rem;">Find more models on the <a href="https://developers.cloudflare.com/workers-ai/models/" target="_blank" style="color: var(--primary);">Cloudflare Dashboard</a>.</small>
                 </div>
 
                 <div class="form-group">
