@@ -275,7 +275,13 @@ const HTML_CONTENT = `
                 }
 
                 // Show response
-                const textResponse = json.data.response || json.data;
+                let textResponse = json.data;
+                if (json.data.response) {
+                    textResponse = json.data.response;
+                } else if (json.data.choices && json.data.choices.length > 0) {
+                    textResponse = json.data.choices[0].message?.content || json.data.choices[0].text || json.data;
+                }
+                
                 resultBox.textContent = typeof textResponse === 'string' ? textResponse : JSON.stringify(textResponse, null, 2);
                 
                 // Set Badge

@@ -1,10 +1,13 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { aiRouter } from './routes/ai';
 import type { Env } from './types';
 
 import { uiRouter } from './routes/ui';
 
 const app = new Hono<{ Bindings: Env }>();
+
+app.use('*', cors());
 
 // Global error handler
 app.onError((err, c) => {
