@@ -70,41 +70,82 @@ function App() {
         body: JSON.stringify({ gitData, model, reportType })
       })
 
-      const json = await response.json()
-
       if (!response.ok) {
+        const json = await response.json().catch(() => ({ error: 'Failed to generate' }))
         throw new Error(json.details || json.error || 'Failed to generate')
       }
 
-      if (json.id) {
-        window.history.pushState({}, '', `?id=${json.id}`)
-        setIsSavedView(true)
-      }
-
-      let textResponse = json.data
-      if (json.data.response) {
-        textResponse = json.data.response
-      } else if (json.data.choices && json.data.choices.length > 0) {
-        textResponse = json.data.choices[0].message?.content || json.data.choices[0].text || json.data
-      }
-      
-      const md = typeof textResponse === 'string' ? textResponse : JSON.stringify(textResponse, null, 2)
-      setRawMarkdown(md)
-
-      if (json.source === 'cache') {
+      const contentType = response.headers.get('Content-Type') || ''
+      if (contentType.includes('text/event-stream')) {
+        const reportId = response.headers.get('X-Report-Id')
+        if (reportId) {
+          window.history.pushState({}, '', `?id=${reportId}`)
+          setIsSavedView(true)
+        }
         setSourceBadge({
-          text: '📦 Cached',
-          color: '#60a5fa',
-          border: 'rgba(96, 165, 250, 0.3)',
-          bg: 'rgba(96, 165, 250, 0.15)'
+          text: '⚡ Generating...',
+          color: '#10b981',
+          border: 'rgba(16, 185, 129, 0.3)',
+          bg: 'rgba(16, 185, 129, 0.15)'
         })
-      } else {
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
+        let fullText = ""
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            const chunk = decoder.decode(value, { stream: true })
+            const lines = chunk.split('\\n')
+            for (const line of lines) {
+              if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                try {
+                  const data = JSON.parse(line.substring(6))
+                  fullText += data.response || ''
+                  setRawMarkdown(fullText)
+                } catch (e) {}
+              }
+            }
+          }
+        }
         setSourceBadge({
           text: '⚡ Generated',
           color: '#10b981',
           border: 'rgba(16, 185, 129, 0.3)',
           bg: 'rgba(16, 185, 129, 0.15)'
         })
+      } else {
+        const json = await response.json()
+        if (json.id) {
+          window.history.pushState({}, '', `?id=${json.id}`)
+          setIsSavedView(true)
+        }
+
+        let textResponse = json.data
+        if (json.data?.response) {
+          textResponse = json.data.response
+        } else if (json.data?.choices && json.data.choices.length > 0) {
+          textResponse = json.data.choices[0].message?.content || json.data.choices[0].text || json.data
+        }
+        
+        const md = typeof textResponse === 'string' ? textResponse : JSON.stringify(textResponse, null, 2)
+        setRawMarkdown(md)
+
+        if (json.source === 'cache') {
+          setSourceBadge({
+            text: '📦 Cached',
+            color: '#60a5fa',
+            border: 'rgba(96, 165, 250, 0.3)',
+            bg: 'rgba(96, 165, 250, 0.15)'
+          })
+        } else {
+          setSourceBadge({
+            text: '⚡ Generated',
+            color: '#10b981',
+            border: 'rgba(16, 185, 129, 0.3)',
+            bg: 'rgba(16, 185, 129, 0.15)'
+          })
+        }
       }
     } catch (err: any) {
       setRawMarkdown(`Error: ${err.message}`)
@@ -131,6 +172,16 @@ function App() {
     } catch (err) {
       console.error('Failed to copy', err)
     }
+  }
+
+  const handleDownload = () => {
+    const blob = new Blob([rawMarkdown], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `case-study-${new Date().getTime()}.md`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -228,13 +279,21 @@ function App() {
                 </div>
               )}
               {rawMarkdown && !error && (
-                <button 
-                  className="copy-btn" 
-                  onClick={handleCopy}
-                  style={isCopied ? { background: 'rgba(16, 185, 129, 0.2)' } : {}}
-                >
-                  {isCopied ? 'Copied!' : 'Copy Markdown'}
-                </button>
+                <>
+                  <button 
+                    className="copy-btn" 
+                    onClick={handleCopy}
+                    style={isCopied ? { background: 'rgba(16, 185, 129, 0.2)' } : {}}
+                  >
+                    {isCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                  <button 
+                    className="copy-btn" 
+                    onClick={handleDownload}
+                  >
+                    Download .md
+                  </button>
+                </>
               )}
               {isSavedView && (
                 <a href="/" className="new-btn">Generate Another</a>

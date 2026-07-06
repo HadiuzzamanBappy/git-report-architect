@@ -7,7 +7,7 @@ const SYSTEM_PROMPTS: Record<string, string> = {
 	case_study: "You are an expert tech analyst and technical writer. Analyze the provided repository data or notes and write a comprehensive, professional Product Post-Mortem and Case Study. Include well-structured Markdown sections for: Overview, Architecture & Tech Stack, Key Features, Challenges Solved, and Conclusion. Make it engaging, professional, and highly insightful."
 };
 
-export async function generateReport(reportType: string, gitData: string, model: string, env: Env) {
+export async function generateReport(reportType: string, gitData: string, model: string, env: Env, stream: boolean = false) {
 	const systemContent = SYSTEM_PROMPTS[reportType] || SYSTEM_PROMPTS['commit'];
 
 	const payloadMessages = [
@@ -17,7 +17,8 @@ export async function generateReport(reportType: string, gitData: string, model:
 
 	// Use Cloudflare Workers AI to run the model
 	const response = await env.AI.run(model as any, {
-		messages: payloadMessages
+		messages: payloadMessages,
+        stream
 	});
 
 	return response;
