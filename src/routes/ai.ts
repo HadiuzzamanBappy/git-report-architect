@@ -49,17 +49,22 @@ aiRouter.post('/generate', async (c) => {
 					const reader = workerStream.getReader();
 					const decoder = new TextDecoder();
 					let fullText = "";
+					let buffer = "";
 					while (true) {
 						const { done, value } = await reader.read();
 						if (done) break;
-						const chunk = decoder.decode(value, { stream: true });
-						const lines = chunk.split('\n');
-						for (const line of lines) {
+						buffer += decoder.decode(value, { stream: true });
+						const lines = buffer.split('\n');
+						buffer = lines.pop() || "";
+						for (let line of lines) {
+							line = line.trim();
 							if (line.startsWith('data: ') && line !== 'data: [DONE]') {
 								try {
 									const data = JSON.parse(line.substring(6));
 									fullText += data.response || '';
-								} catch (e) {}
+								} catch (e) {
+									console.error('Worker failed to parse SSE line:', line, e);
+								}
 							}
 						}
 					}

@@ -110,19 +110,24 @@ function App() {
         const reader = response.body?.getReader()
         const decoder = new TextDecoder()
         let fullText = ""
+        let buffer = ""
         if (reader) {
           while (true) {
             const { done, value } = await reader.read()
             if (done) break
-            const chunk = decoder.decode(value, { stream: true })
-            const lines = chunk.split('\\n')
-            for (const line of lines) {
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
+            buffer = lines.pop() || "" // Keep incomplete line in buffer
+            for (let line of lines) {
+              line = line.trim()
               if (line.startsWith('data: ') && line !== 'data: [DONE]') {
                 try {
                   const data = JSON.parse(line.substring(6))
                   fullText += data.response || ''
                   setRawMarkdown(fullText)
-                } catch (e) {}
+                } catch (e) {
+                  console.error('Failed to parse SSE line:', line, e)
+                }
               }
             }
           }
@@ -244,7 +249,6 @@ function App() {
                     <option value="@cf/meta/llama-3.3-70b-instruct-fp8-fast">Llama 3.3 70B Instruct (Fast)</option>
                     <option value="@cf/meta/llama-3.1-8b-instruct-fp8">Llama 3.1 8B Instruct</option>
                     <option value="@cf/meta/llama-3.1-70b-instruct">Llama 3.1 70B Instruct</option>
-                    <option value="@cf/meta/llama-3.2-3b-instruct">Llama 3.2 3B Instruct</option>
                     <option value="@cf/meta/llama-3.2-1b-instruct">Llama 3.2 1B Instruct</option>
                   </optgroup>
                   <optgroup label="Qwen & DeepSeek">

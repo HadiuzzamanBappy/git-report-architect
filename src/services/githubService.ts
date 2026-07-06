@@ -33,15 +33,20 @@ export async function fetchGithubData(url: string, githubToken?: string): Promis
         headers['Authorization'] = `Bearer ${githubToken}`;
     }
 
-    // Fetch Repo Metadata
-    const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
+    // Fetch all data in parallel for maximum speed
+    const [repoRes, readmeRes, pkgRes, commitsRes] = await Promise.all([
+        fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/readme`, { headers }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/contents/package.json`, { headers }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=5`, { headers })
+    ]);
+
     if (!repoRes.ok) {
         throw new Error(`Failed to fetch repository data: ${repoRes.statusText}`);
     }
     const repoData: any = await repoRes.json();
 
-    // Fetch README content
-    const readmeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/readme`, { headers });
+    // Process README content
     let readmeText = "";
     if (readmeRes.ok) {
         const readmeData: any = await readmeRes.json();
@@ -50,8 +55,7 @@ export async function fetchGithubData(url: string, githubToken?: string): Promis
         }
     }
 
-    // Fetch package.json content (for JS/TS projects)
-    const pkgRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/package.json`, { headers });
+    // Process package.json content (for JS/TS projects)
     let pkgText = "";
     if (pkgRes.ok) {
         const pkgData: any = await pkgRes.json();
@@ -70,8 +74,7 @@ export async function fetchGithubData(url: string, githubToken?: string): Promis
         }
     }
 
-    // Fetch recent commits
-    const commitsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=5`, { headers });
+    // Process recent commits
     let commitsText = "";
     if (commitsRes.ok) {
         const commitsData: any[] = await commitsRes.json();
