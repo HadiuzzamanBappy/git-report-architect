@@ -13,6 +13,25 @@ function App() {
   const [isCopied, setIsCopied] = useState(false)
   const [isSavedView, setIsSavedView] = useState(false)
 
+  const typeDescriptions: Record<string, { desc: string, placeholder: string }> = {
+    case_study: {
+      desc: "Analyzes architecture, commits, and dependencies to write a professional Post-Mortem.",
+      placeholder: "e.g., https://github.com/honojs/hono or paste raw project notes..."
+    },
+    commit: {
+      desc: "Generates a clean, conventional commit message.",
+      placeholder: "Paste your git diff or a messy description of your code changes..."
+    },
+    changelog: {
+      desc: "Groups raw commits into a structured Markdown release document.",
+      placeholder: "Paste a list of git commits or messy release notes..."
+    },
+    pr: {
+      desc: "Writes a detailed Pull Request description explaining the 'Why' and 'How'.",
+      placeholder: "Paste your massive git diff to summarize the pull request..."
+    }
+  }
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const savedId = urlParams.get('id')
@@ -208,6 +227,9 @@ function App() {
                   <option value="changelog">Markdown Changelog</option>
                   <option value="pr">Pull Request Summary</option>
                 </select>
+                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                  {typeDescriptions[reportType].desc}
+                </p>
               </div>
 
               <div className="form-group">
@@ -242,10 +264,10 @@ function App() {
               </div>
 
               <div className="form-group full-width">
-                <label htmlFor="gitData">Data Source (GitHub URL or Raw Notes)</label>
+                <label htmlFor="gitData">Data Source</label>
                 <textarea 
                   id="gitData" 
-                  placeholder="e.g., https://github.com/honojs/hono or paste raw unstructured notes..." 
+                  placeholder={typeDescriptions[reportType].placeholder} 
                   required
                   value={gitData}
                   onChange={e => setGitData(e.target.value)}
